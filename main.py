@@ -9,7 +9,6 @@ from time import sleep
 window = ""
 memory = []
 processors = []
-misses = []
 cache1 = {}
 cache2 = {}
 cache3 = {}
@@ -33,8 +32,10 @@ entry_value = ""
 entry_dir = ""
 entry_proc = ""
 
+list_misses = []
+
 def begin():
-    global window, next_list, current_list, entry, list_data, list_cache, entry_state, entry_value, entry_dir, entry_proc
+    global window, next_list, current_list, entry, list_data, list_cache, entry_state, entry_value, entry_dir, entry_proc, list_misses
 
     window = tk.Tk()
     width = 1200
@@ -52,6 +53,12 @@ def begin():
 
     list_dir.place(x=185, y=200)
     list_data.place(x=201, y=200)
+
+    misses_label = tk.Label(window, text="Misses found")
+    misses_label.place(x=445, y=180)
+
+    list_misses = tk.Listbox(window, width=16, height=8)
+    list_misses.place(x=445, y=200)
 
     curr_ins_label_1 = tk.Label(window, text="Current instruction")
     curr_ins_label_2 = tk.Label(window, text="Current instruction")
@@ -146,15 +153,15 @@ def begin():
     list_bloq_4.place(x=705, y=84)
 
     modes_label = tk.Label(window, text="Modes")
-    modes_label.place(x=445, y=180)
+    modes_label.place(x=705, y=180)
 
     button_step = tk.Button(window, text="Step by step", command=step_func)
     button_continuous = tk.Button(window, text="Continuous", command=continuous_func)
     button_pause = tk.Button(window, text=" Pause  ", command=pause_func)
 
-    button_step.place(x=445, y=200)
-    button_continuous.place(x=445, y=230)
-    button_pause.place(x=445, y=260)
+    button_step.place(x=705, y=200)
+    button_continuous.place(x=705, y=230)
+    button_pause.place(x=705, y=260)
 
     change_instr_label = tk.Label(window, text="Change instruction")
     change_instr_label.place(x=840, y=180)
@@ -198,12 +205,10 @@ def continuous_func():
     continuous = True
 
 def update_misses(number):
-    global misses
-    if processors[number].control.misses != "":
-        print("P", number + 1, "miss", processors[number].control.misses)
-        misses.append(processors[number].control.misses)
-        print("Misses:", misses)
-    processors[number].control.misses = ""
+    global list_misses
+    if processors[number].control.bus.misses != "":
+        list_misses.insert(0, processors[number].control.bus.misses)
+    processors[number].control.bus.misses = ""
 
 def update_memory():
     global list_data
@@ -285,10 +290,8 @@ def execute_proc(number):
         while (continuous or cicle < local_cicles):
             with threading.Lock():
                 processors[number].run(new_instruccion)
-                '''if processors[number].control.misses != "":
-                    misses.append(processors[number].control.misses)'''
-                update_misses(number)
                 update_memory()
+                update_misses(number)
                 update_cache(number + 1)
                 update_instructions(number + 1)
                 if local_cicles > 1 or continuous:

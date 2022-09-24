@@ -27,6 +27,7 @@ class bus:
         this.process_control_2=""
         this.process_control_3=""
         this.process_control_4=""
+        this.misses=""
 
     # Leer valores del procesador
     def read_data(this, direction_memory, number):
@@ -53,9 +54,10 @@ class bus:
             i+=1
             lock.release()
 
-        # Retardo por lectura a memoria
+        # Retardo por lectura a memoria (miss)
         #print("Procesador", number, "| Inicio del retardo por lectura a memoria")
-        #sleep(4)  
+        #sleep(4)
+        this.misses = ("P"+str(number), "read", direction_memory)
         value=this.memory.read_data(direction_memory)
         #print("Procesador", number, "| Fin del retardo por lectura a memoria")
         return ("E", value)
@@ -72,11 +74,13 @@ class bus:
             this.process_control_4=process_control
             
     # Escribir dato en memoria
-    def write_memory_data(this, direction_memory, data, number):
+    def write_memory_data(this, direction_memory, value, number):
+        # Retardo por escritura a memoria (miss)
         #print("Procesador", number, "| Inicio del retardo por escritura a memoria")
         #sleep(4)  
-        this.memory.write_data(direction_memory, data)
-        #print("Procesador", number, "| Fin del retardo por escritura a memoria")
+        this.misses = ("P"+str(number), "write", direction_memory, value)
+        this.memory.write_data(direction_memory, value)
+        #print("Procesador", number, "| Fin del retardo por escritura a memoria"
         #return this.memory.read_data(direction_memory)
     
     # Invalidar datos
