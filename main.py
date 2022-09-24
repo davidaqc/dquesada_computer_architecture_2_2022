@@ -206,9 +206,9 @@ def continuous_func():
 
 def update_misses(number):
     global list_misses
-    if processors[number].control.bus.misses != "":
-        list_misses.insert(0, processors[number].control.bus.misses)
-    processors[number].control.bus.misses = ""
+    if processors[number].control.misses != "":
+        list_misses.insert(0, processors[number].control.misses)
+    processors[number].control.misses = ""
 
 def update_memory():
     global list_data
@@ -317,7 +317,6 @@ def set_initial_data():
 
     for i in range(1, 5):
         # Se crean 4 instancias del procesador
-        print(i)
         processors.append(processor(i))
         # Se crean e inicializan 4 hilos
         threads.append(threading.Thread(target=execute_proc, args=(i-1,)))

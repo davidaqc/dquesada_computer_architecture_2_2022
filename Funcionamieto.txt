@@ -1,0 +1,17 @@
+* Initially the memory is cold (desaciertos obligatorios) so the memory hasn't values and the state is Invalid.
+
+After that, if the operation (read 2) loads, write '0000' to the cache.
+
+--------- En diferente step --------------
+** P1 = E, 4, 0x0004 luego P2 read 4 (ambos en S, con 0x0004)
+** P1 = E, 4, 0x0004 luego P2 read 0 (P1 = E, 4, 0x0004 | P2 = E, 0, 0x0000 (dato de memoria))
+** P1 = E, 4, 0x0004 luego P1 read 4 (queda igual)
+** P1 = M, 0, 0x0001 luego P2 read 0 (ambos en S, P2 = 0x0001 y WB = 0x0001)
+** P1 = E, 4, 0x0000 luego P2 write 4, 0x1010 (P1 = I, P2 = M, 4, 0x1010)
+
+
+--------- En el mismo step --------------
+** P1 read (0-I) y P2 read (B0-I) entonces P1 (0-S), P2 (0-S) con el dato de memoria
+** P1 read (0-I) y P2 read (B4-I) entonces P1 (0-E), P2 (0-E) con el dato de memoria B0 y B4 respectivamente
+**** P1(1-I) write 1, 0x0001 y P2(1-I) read 1 entonces P1 = P2 = 1S, 0x0001 y WB a 1 con 0x0001
+** P0(6-I) write 6, 0x0001 y P1(6-I) write 6, 0x0002 entonces P0 = (6-I, 0x0001 y WB), P1 = (6-M, 0x0002)

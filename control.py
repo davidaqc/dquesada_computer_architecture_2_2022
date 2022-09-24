@@ -36,7 +36,6 @@ class control:
 
         if isinstance(block, str) and not request:
             print ("Procesador", this.number, "| Dato invalido, revisar bus")
-            this.misses = (this.number, "read", direction_memory)
             return this.check_bus_data(direction_memory)
         elif not isinstance(block, str) and request:
             replacement_state="S"
@@ -47,6 +46,7 @@ class control:
                 elif block["state"]=="M":
                     replacement_local_state="S"
                     this.bus.write_memory_data(direction_memory, block["value"], this.number)
+                    this.misses = ("P"+str(this.number), "write", direction_memory, block["value"])
                 this.cache.change_state(direction_memory, replacement_local_state, i)
             return (replacement_state, block["value"])
         elif not isinstance(block, str):
@@ -57,6 +57,14 @@ class control:
     # Revisa el bus de datos
     def check_bus_data(this, direction_memory):
         block=this.bus.read_data(direction_memory, this.number)
+
+        if block[0] == "E":
+            # Retardo por lectura a memoria (miss)
+            #print("Procesador", number, "| Inicio del retardo por lectura a memoria")
+            #sleep(4)
+            #print("Procesador", number, "| Fin del retardo por lectura a memoria")
+            this.misses = ("P"+str(this.number-1), "read", direction_memory)
+
         i=this.replacement_policy(direction_memory)
         this.cache.write_data(block[1], i, direction_memory, block[0])
         return block
@@ -99,21 +107,29 @@ class control:
                 i = 0
                 block=this.cache.read_data(this.cache_state[str(i)]["dir"])
                 this.bus.write_memory_data(this.cache_state[str(i)]["dir"], block["value"], this.number)
+                # Retardo por escritura a memoria (miss)
+                #print("Procesador", number, "| Inicio del retardo por escritura a memoria")
+                #sleep(4) 
+                #print("Procesador", number, "| Fin del retardo por escritura a memoria"
+                this.misses = ("P"+str(this.number), "write", direction_memory, block["value"])
         elif direction_memory%4==1:
             if this.cache_state["1"]["state"] == "M":
                 i = 1
                 block=this.cache.read_data(this.cache_state[str(i)]["dir"])
                 this.bus.write_memory_data(this.cache_state[str(i)]["dir"], block["value"], this.number)
+                this.misses = ("P"+str(this.number), "write", direction_memory, block["value"])
         elif direction_memory%4==2:
             if this.cache_state["2"]["state"] == "M":
                 i = 2
                 block=this.cache.read_data(this.cache_state[str(i)]["dir"])
                 this.bus.write_memory_data(this.cache_state[str(i)]["dir"], block["value"], this.number)
+                this.misses = ("P"+str(this.number), "write", direction_memory, block["value"])
         elif direction_memory%4==3:
             if this.cache_state["3"]["state"] == "M":
                 i = 3
                 block=this.cache.read_data(this.cache_state[str(i)]["dir"])
                 this.bus.write_memory_data(this.cache_state[str(i)]["dir"], block["value"], this.number)
+                this.misses = ("P"+str(this.number), "write", direction_memory, block["value"])
 
         return i
 
@@ -136,6 +152,7 @@ class control:
             if this.cache_state[str(block)]["state"]=="M":
                 block_readed=this.cache.read_data(this.cache_state[str(block)]["dir"])
                 this.bus.write_memory_data(this.cache_state[str(block)]["dir"], block_readed["value"], this.number)
+                this.misses = ("P"+str(this.number), "write", direction_memory, block_readed["value"])
             this.cache.change_state(direction_memory, "I", block)
             return True
         else:

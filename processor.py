@@ -14,11 +14,11 @@ class processor:
 
     # Genera las instrucciones con valores y direcciones aleatorias
     def generate_instruction(this):
-        '''if this.number == 3 or this.number == 4:
+        if this.number == 3 or this.number == 4:
             instruction=0
         else:
-            instruction=randint(0,2)'''
-        instruction=this.getPoisson(1.0)
+            instruction=randint(0,2)
+        #instruction=this.getPoisson(1.0)
         instruction=this.instructions[instruction]
         this.current_instruction=this.next_instruction
 
