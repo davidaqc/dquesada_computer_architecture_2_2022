@@ -1,17 +1,23 @@
-from math import exp
-from random import random
+from control import control
 from random import randint
+from random import random
+from math import exp
 
 class processor:
 
     def __init__(this, number):
+        this.control=control(number)
         this.number=number
         this.current_instruction=[]
         this.next_instruction=[]
         this.instructions=("calc","read","write")
 
-    # Genera las instrucciones con valores y direccines aleatorias
+    # Genera las instrucciones con valores y direcciones aleatorias
     def generate_instruction(this):
+        '''if this.number == 3 or this.number == 4:
+            instruction=0
+        else:
+            instruction=randint(0,2)'''
         instruction=this.getPoisson(1.0)
         instruction=this.instructions[instruction]
         this.current_instruction=this.next_instruction
@@ -36,15 +42,15 @@ class processor:
             this.current_instruction=instruction
         
         if len(this.current_instruction)==0:
-            print("Message: No instruction loaded")
+            print("Cold memory: No instruction loaded")
         else:
             if this.current_instruction[0]=="write":
-                print ("P", this.number, ", Instruccion: ", this.current_instruction)
+                print ("Procesador", this.number, "| Instruccion: ", this.current_instruction)
                 this.control.write_data(this.current_instruction[1], this.current_instruction[2])
             elif this.current_instruction[0]=="read":
-                print ("P", this.number, ", Instruccion: ", this.current_instruction)
+                print ("Procesador", this.number, "| Instruccion: ", this.current_instruction)
                 this.control.read_data(this.current_instruction[1])
-
+    
     # Genera un número aleatorio de 0 a 2 mediante la distribucion de poisson
     def getPoisson(this, var_lambda):
         L = exp(-var_lambda)
@@ -58,4 +64,5 @@ class processor:
         result = k - 1
         if result>=3:
             result =  this.getPoisson(var_lambda)
+
         return result

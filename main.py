@@ -22,7 +22,7 @@ list_data = []
 list_cache = []
 threads = []
 run = True
-infinite = False
+continuous = False
 cicles = 0
 step = False
 multiple_steps = False
@@ -181,31 +181,152 @@ def begin():
     button_change.place(x=965, y=286)
 
 def pause_func():
-    pass
+    global continuous
+    if continuous:
+        continuous = False
 
 def step_func():
-    pass
+    global step
+    step = not step 
 
 def change_instr_func():
-    pass
+    global change_instruction
+    change_instruction = True
 
 def continuous_func():
-    pass
+    global continuous
+    continuous = True
 
-def update_misses():
-    pass
+def update_misses(number):
+    global misses
+    if processors[number].control.misses != "":
+        print("P", number + 1, "miss", processors[number].control.misses)
+        misses.append(processors[number].control.misses)
+        print("Misses:", misses)
+    processors[number].control.misses = ""
 
 def update_memory():
-    pass
+    global list_data
+    for i in range(len(memory)):
+        list_data.insert(i, memory[i])
 
 def update_cache(number):
-    pass
+    global list_cache
+    global cache1, cache2, cache3, cache4
+    cache = {}
 
+    if number == 1:
+        cache = cache1
+    elif number == 2:
+        cache = cache2
+    elif number == 3:
+        cache = cache3
+    else:
+        cache = cache4
+    string = ""
+    count = 0
+    if True:
+        string += cache["3"]["state"] + "\t " + str(cache["3"]["dir"]) + "\t " + cache["3"]["value"]
+        list_cache[number - 1].insert(count, string)
+        string = ""
+        count += 1
+    string = ""
+    count = 0
+    if True:
+        string += cache["2"]["state"] + "\t " + str(cache["2"]["dir"]) + "\t " + cache["2"]["value"]
+        list_cache[number - 1].insert(count, string)
+        string = ""
+        count += 1
+        string = ""
+    count = 0
+    if True:
+        string += cache["1"]["state"] + "\t " + str(cache["1"]["dir"]) + "\t " + cache["1"]["value"]
+        list_cache[number - 1].insert(count, string)
+        string = ""
+        count += 1
+        string = ""
+    count = 0
+    if True:
+        string += cache["0"]["state"] + "\t " + str(cache["0"]["dir"]) + "\t " + cache["0"]["value"]
+        list_cache[number - 1].insert(count, string)
+        string = ""
+        count += 1
+    
 def execute_proc(number):
-    pass
+    global processors, run, cicles, step, multiple_steps, change_instruction, entry_state, entry_value, entry_dir, entry_proc
+    new_instruccion=[]
+    local_cicles = 0
+    cicle = 0
+    local_step = False
+    local_steps = False
+    while (run):
+        if local_step != step:
+            local_step = copy.copy(step)
+            local_cicles = 1
+            cicle = 0
+        elif local_steps != multiple_steps:
+            local_cicles = copy.copy(cicles)
+            local_steps = copy.copy(multiple_steps)
+            cicle = 0
+
+        if change_instruction:
+            if entry_proc.get() != "":
+                if number == int(entry_proc.get()):
+                    if entry_state.get() == "calc":
+                        new_instruccion=[entry_state.get()]
+                    elif entry_state.get() == "read":
+                        new_instruccion=[entry_state.get(), int(entry_dir.get())]
+                    elif entry_state.get() == "write":
+                        new_instruccion=[entry_state.get(), int(entry_dir.get()), entry_value.get()]
+                else:
+                    new_instruccion=[]
+            change_instruction = False
+        
+        while (continuous or cicle < local_cicles):
+            with threading.Lock():
+                processors[number].run(new_instruccion)
+                '''if processors[number].control.misses != "":
+                    misses.append(processors[number].control.misses)'''
+                update_misses(number)
+                update_memory()
+                update_cache(number + 1)
+                update_instructions(number + 1)
+                if local_cicles > 1 or continuous:
+                    sleep(2)
+                cicle += 1
+                new_instruccion=[]
 
 def update_instructions(number):
-    pass
+    global current_list, next_list
+    proc = processors[number - 1]
+    curr_str = ""
+    next_str = ""
+    for i in proc.current_instruction:
+        curr_str += str(i) + " "
+    for i in proc.next_instruction:
+        next_str += str(i) + " "
+
+    current_list[proc.number - 1].insert(0, curr_str)
+    next_list[proc.number - 1].insert(0, next_str)
+
+def set_initial_data():
+    global processors, memory, cache1, cache2, cache3, cache4, threads
+
+    for i in range(1, 5):
+        # Se crean 4 instancias del procesador
+        print(i)
+        processors.append(processor(i))
+        # Se crean e inicializan 4 hilos
+        threads.append(threading.Thread(target=execute_proc, args=(i-1,)))
+        threads[i - 1].start()
+
+    # Toma los valores iniciales de la memoria (cualquier procesador lo puede iniciar)
+    memory = processors[0].control.bus.memory.memory
+    # Toma los valores iniciales de cada cache (desaciertos obligatorios)
+    cache1 = processors[0].control.cache.cache_memory
+    cache2 = processors[1].control.cache.cache_memory
+    cache3 = processors[2].control.cache.cache_memory
+    cache4 = processors[3].control.cache.cache_memory
 
 def on_finish():
     global threads, run, window
@@ -218,6 +339,7 @@ def on_finish():
 def main():
     global window
 
+    set_initial_data()
     begin()
 
     window.protocol("WM_DELETE_WINDOW", on_finish)

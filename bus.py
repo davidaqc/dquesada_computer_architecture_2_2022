@@ -1,5 +1,10 @@
 import threading
 
+from memory import memory
+from threading import Lock
+from time import sleep
+
+lock = Lock()
 
 class bus:
     __instance=None
@@ -15,8 +20,9 @@ class bus:
                     print("Error: bus instance not created, currently exists")
         return bus.__instance
 
-    # Inicializo los procesadores
+    # Inicializar los procesadores
     def __init__(this):
+        this.memory=memory.instantiate()
         this.process_control_1=""
         this.process_control_2=""
         this.process_control_3=""
@@ -27,27 +33,33 @@ class bus:
         block=()
         i=1
         while(i<5):
+            lock.acquire()
             if i==1 and i!=number:
                 block = this.process_control_1.read_data(direction_memory, True)
-                print("P", number, ", Revisando si el procesador 1 tiene el dato: ", block)
+                print("Procesador", number, "| Revisando si el procesador 1 tiene el dato: ", block)
             elif i==2 and i!=number:
                 block = this.process_control_2.read_data(direction_memory, True)
-                print("P", number, ", Revisando si el procesador 2 tiene el dato: ", block)
+                print("Procesador", number, "| Revisando si el procesador 2 tiene el dato: ", block)
             elif i==3 and i!=number:
                 block = this.process_control_3.read_data(direction_memory, True)
-                print("P", number, ", Revisando si el procesador 3 tiene el dato: ", block)
+                print("Procesador", number, "| Revisando si el procesador 3 tiene el dato: ", block)
             elif i==4 and i!=number:
                 block = this.process_control_4.read_data(direction_memory, True)
-                print("P", number, ", Revisando si el procesador 4 tiene el dato: ", block)
+                print("Procesador", number, "| Revisando si el procesador 4 tiene el dato: ", block)
 
             if len(block)!=0:
+                lock.release()
                 return block
             i+=1
-            
+            lock.release()
+
+        # Retardo por lectura a memoria
+        #print("Procesador", number, "| Inicio del retardo por lectura a memoria")
+        #sleep(4)  
         value=this.memory.read_data(direction_memory)
+        #print("Procesador", number, "| Fin del retardo por lectura a memoria")
         return ("E", value)
 
-    
     # Refresco los valores del procesador
     def set_process_control(this, number, process_control):
         if number==1:
@@ -59,10 +71,13 @@ class bus:
         elif number==4:
             this.process_control_4=process_control
             
-    # Escribe dato en memoria
-    def write_memory_data(this, direction_memory, data):
+    # Escribir dato en memoria
+    def write_memory_data(this, direction_memory, data, number):
+        #print("Procesador", number, "| Inicio del retardo por escritura a memoria")
+        #sleep(4)  
         this.memory.write_data(direction_memory, data)
-        return this.memory.read_data(direction_memory)
+        #print("Procesador", number, "| Fin del retardo por escritura a memoria")
+        #return this.memory.read_data(direction_memory)
     
     # Invalidar datos
     def invalidate_all(this, direction_memory, number):
@@ -77,6 +92,3 @@ class bus:
             elif i==4 and i!=number:
                 this.process_control_4.invalidate_instr(direction_memory)
             i+=1
-
-    
-            

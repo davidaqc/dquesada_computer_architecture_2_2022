@@ -33,7 +33,6 @@ class cache():
 
     # Leer dato de cache
     def read_data(this, direction_memory):
-
         block=""
 
         # correspondencia set one way (directa)
@@ -50,10 +49,7 @@ class cache():
 
     # Escribir dato en cache
     def write_data(this, value, replacement_direction, direction_memory, state=None):
-        block=""
-
         block=this.cache_memory[str(replacement_direction)]
-
         block["value"]=copy(value)
         block["dir"]=direction_memory
 
@@ -62,6 +58,6 @@ class cache():
         return value
 
     # Cambiar estado en la cache
-    def change_state(this, state, replacement_direction):
+    def change_state(this, direction_memory, state, replacement_direction):
         this.cache_memory[str(replacement_direction)]["state"]=state
         return state
